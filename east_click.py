@@ -24,16 +24,20 @@ FPS = 60
 # Configuração da fonte para exibir texto na tela
 FONTE_TITULO = pygame.font.Font(None, 74)
 FONTE = pygame.font.Font(None, 50)
+FONTE_PEQUENA = pygame.font.Font(None, 35)
 
 # Nome do arquivo que guardará o recorde
 ARQUIVO_HIGHSCORE = "highscore.txt"
 
 # --- FUNÇÕES AUXILIARES ---
-# Função para desenhar texto de forma centralizada na tela
-def desenhar_texto(texto, fonte, cor, superficie, x, y):
+# Função para desenhar texto na tela com diferentes alinhamentos
+def desenhar_texto(texto, fonte, cor, superficie, x, y, alinhamento="centro"):
     textobj = fonte.render(texto, True, cor)
     textrect = textobj.get_rect()
-    textrect.center = (x, y)
+    if alinhamento == "centro":
+        textrect.center = (x, y)
+    elif alinhamento == "topo_esquerda":
+        textrect.topleft = (x, y)
     superficie.blit(textobj, textrect)
 
 # Função para resetar e configurar as variáveis de um nível
@@ -48,7 +52,7 @@ def iniciar_nivel():
     raio_min = dificuldade['raio_min']
     raio_max = dificuldade['raio_max']
 
-# Funções para carregar e salvar a pontuação máxima (high score)
+# Funções para ler e escrever a pontuação máxima no arquivo
 def carregar_high_score():
     try:
         with open(ARQUIVO_HIGHSCORE, 'r') as f:
@@ -61,13 +65,13 @@ def salvar_high_score(score):
         f.write(str(score))
 
 # --- 2. VARIÁVEIS DO JOGO ---
-# Controla em qual tela o jogo está (menu, jogando, etc.)
+# Variável que controla a tela atual do jogo
 estado_jogo = "menu_inicial"
-# Nível atual do jogo
+# Nível atual
 nivel = 1
 # Metas de pontos para cada nível
 METAS = {1: 15, 2: 25}
-# Configurações de dificuldade para cada nível
+# Configurações de dificuldade (velocidade de spawn e tamanho dos alvos)
 DIFICULDADES = {
     1: {'spawn': 1000, 'raio_min': 30, 'raio_max': 60},
     2: {'spawn': 750, 'raio_min': 20, 'raio_max': 45}
@@ -78,7 +82,7 @@ alvos = []
 
 # Lógica de "spawn" dos alvos
 TEMPO_PARA_SPAWN = None
-ultimo_spawn = 0  # Guarda o tempo do último alvo criado
+ultimo_spawn = 0 # Guarda o tempo do último alvo criado
 raio_min, raio_max = 0, 0
 
 # Pontuação
@@ -91,28 +95,92 @@ tempo_inicio = 0  # Registra quando o jogo começou
 # Carrega o recorde salvo no arquivo
 high_score = carregar_high_score()
 
+# Variáveis para controlar o menu navegável
+opcoes_menu = ["Iniciar Jogo", "Regras", "Sobre", "Recordes", "Sair"]
+opcao_selecionada = 0
+
 # --- 3. O CORAÇÃO DO JOGO (LOOP PRINCIPAL) ---
 rodando = True
 while rodando:
     relogio.tick(FPS)
 
-    # A estrutura principal verifica o estado do jogo para decidir o que fazer
+    # Lógica para a tela de Menu Inicial
     if estado_jogo == "menu_inicial":
         TELA.fill(PRETO)
-        desenhar_texto("Alvo Rápido", FONTE_TITULO, BRANCO, TELA, LARGURA // 2, ALTURA // 4)
-        desenhar_texto(f"RECORDE: {high_score}", FONTE, AMARELO, TELA, LARGURA // 2, ALTURA // 4 + 70)
-        desenhar_texto("Pressione ESPAÇO para começar", FONTE, BRANCO, TELA, LARGURA // 2, ALTURA // 2 + 50)
-        desenhar_texto("Acerte a meta de pontos antes do tempo acabar!", FONTE, BRANCO, TELA, LARGURA // 2, ALTURA * 3 // 4 + 50)
+        desenhar_texto("Alvo Rápido", FONTE_TITULO, BRANCO, TELA, LARGURA // 2, ALTURA // 4 - 50)
+        # Desenha as opções do menu, destacando a selecionada
+        for i, opcao in enumerate(opcoes_menu):
+            cor = AMARELO if i == opcao_selecionada else BRANCO
+            desenhar_texto(opcao, FONTE, cor, TELA, LARGURA // 2, ALTURA // 2 + i * 60)
         
-        # Cuida dos inputs do jogador na tela de menu
+        # Cuida dos inputs do jogador para navegar no menu
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 rodando = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                nivel = 1
-                iniciar_nivel()
-                estado_jogo = "jogando"
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    opcao_selecionada = (opcao_selecionada - 1) % len(opcoes_menu)
+                elif event.key == pygame.K_DOWN:
+                    opcao_selecionada = (opcao_selecionada + 1) % len(opcoes_menu)
+                elif event.key == pygame.K_RETURN:
+                    opcao_escolhida = opcoes_menu[opcao_selecionada]
+                    if opcao_escolhida == "Iniciar Jogo":
+                        nivel = 1
+                        iniciar_nivel()
+                        estado_jogo = "jogando"
+                    elif opcao_escolhida == "Regras":
+                        estado_jogo = "regras"
+                    elif opcao_escolhida == "Sobre":
+                        estado_jogo = "sobre"
+                    elif opcao_escolhida == "Recordes":
+                        estado_jogo = "recordes"
+                    elif opcao_escolhida == "Sair":
+                        rodando = False
 
+    # Lógica para a tela de Regras
+    elif estado_jogo == "regras":
+        TELA.fill(PRETO)
+        desenhar_texto("Regras", FONTE_TITULO, BRANCO, TELA, LARGURA // 2, 100)
+        desenhar_texto("- Clique nos alvos para pontuar.", FONTE_PEQUENA, BRANCO, TELA, 100, 200, "topo_esquerda")
+        desenhar_texto("- Alvos Vermelhos: +1 ponto", FONTE_PEQUENA, VERMELHO, TELA, 120, 250, "topo_esquerda")
+        desenhar_texto("- Alvos Verdes: +5 pontos (Bônus!)", FONTE_PEQUENA, VERDE, TELA, 120, 300, "topo_esquerda")
+        desenhar_texto("- Alvos Azuis: -3 pontos (Penalidade!)", FONTE_PEQUENA, AZUL, TELA, 120, 350, "topo_esquerda")
+        desenhar_texto("- Cumpra a meta de pontos antes do tempo acabar.", FONTE_PEQUENA, BRANCO, TELA, 100, 400, "topo_esquerda")
+        desenhar_texto("Pressione ESC para voltar ao menu", FONTE, AMARELO, TELA, LARGURA // 2, ALTURA - 50)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                rodando = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                estado_jogo = "menu_inicial"
+
+    # Lógica para a tela Sobre
+    elif estado_jogo == "sobre":
+        TELA.fill(PRETO)
+        desenhar_texto("Sobre", FONTE_TITULO, BRANCO, TELA, LARGURA // 2, 100)
+        desenhar_texto("Este projeto foi desenvolvido por:", FONTE_PEQUENA, BRANCO, TELA, LARGURA // 2, 220)
+        desenhar_texto("Eugenio Domingues", FONTE, AMARELO, TELA, LARGURA // 2, 280)
+        desenhar_texto("como trabalho de Linguagem de Programação Aplicada", FONTE_PEQUENA, BRANCO, TELA, LARGURA // 2, 350)
+        desenhar_texto("para a Uninter.", FONTE_PEQUENA, BRANCO, TELA, LARGURA // 2, 390)
+        desenhar_texto("Pressione ESC para voltar ao menu", FONTE, AMARELO, TELA, LARGURA // 2, ALTURA - 50)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                rodando = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                estado_jogo = "menu_inicial"
+
+    # Lógica para a tela de Recordes
+    elif estado_jogo == "recordes":
+        TELA.fill(PRETO)
+        desenhar_texto("Recorde", FONTE_TITULO, BRANCO, TELA, LARGURA // 2, 150)
+        desenhar_texto(str(high_score), FONTE_TITULO, AMARELO, TELA, LARGURA // 2, ALTURA // 2)
+        desenhar_texto("Pressione ESC para voltar ao menu", FONTE, AMARELO, TELA, LARGURA // 2, ALTURA - 50)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                rodando = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                estado_jogo = "menu_inicial"
+
+    # Lógica principal do jogo
     elif estado_jogo == "jogando":
         # --- 4. CUIDANDO DOS INPUTS DO JOGADOR ---
         for event in pygame.event.get():
@@ -131,7 +199,6 @@ while rodando:
 
         # --- 5. A LÓGICA ---
         tempo_agora = pygame.time.get_ticks()
-
         # Lógica do novo alvo
         if tempo_agora - ultimo_spawn > TEMPO_PARA_SPAWN:
             raio_alvo = random.randint(raio_min, raio_max)
@@ -145,21 +212,20 @@ while rodando:
             novo_alvo = {'rect': rect, 'tipo': tipo, 'cor': cor}
             alvos.append(novo_alvo)
             ultimo_spawn = tempo_agora
-
+        
         # Lógica do temporizador
         tempo_decorrido = tempo_agora - tempo_inicio
-        tempo_restante = (TEMPO_DO_NIVEL - tempo_decorrido) // 1000  # Converte para segundos
-        
+        tempo_restante = (TEMPO_DO_NIVEL - tempo_decorrido) // 1000 # Converte para segundos
         # Garante que o tempo não fique negativo na tela
         if tempo_restante < 0:
             tempo_restante = 0
 
-        # Verifica se a meta foi atingida para avançar ou vencer
+        # Verifica a condição de vitória ou derrota
         if pontos >= METAS[nivel]:
             if nivel == 1:
                 nivel = 2
                 iniciar_nivel()
-            else: # Vitória no nível 2
+            else:
                 if pontos > high_score:
                     high_score = pontos
                     salvar_high_score(high_score)
@@ -173,15 +239,12 @@ while rodando:
 
         # --- 6. DESENHANDO NA TELA ---
         TELA.fill(PRETO)
-
         # Desenha um círculo para cada alvo na nossa lista
         for alvo_dict in alvos:
             pygame.draw.circle(TELA, alvo_dict['cor'], alvo_dict['rect'].center, alvo_dict['rect'].width // 2)
-
         # Desenha o placar de pontos
         texto_pontos_surface = FONTE.render(f"Pontos: {pontos} / {METAS[nivel]}", True, BRANCO)
         TELA.blit(texto_pontos_surface, (10, 10))
-
         # Desenha o temporizador
         texto_tempo_surface = FONTE.render(f"Tempo: {tempo_restante}", True, BRANCO)
         pos_x_tempo = LARGURA - texto_tempo_surface.get_width() - 10
@@ -213,7 +276,6 @@ while rodando:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 estado_jogo = "menu_inicial"
 
-    # Mostra tudo que foi desenhado
     pygame.display.flip()
 
 # --- 7. TUDO ACABOU ---
