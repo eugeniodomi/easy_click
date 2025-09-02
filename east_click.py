@@ -1,6 +1,8 @@
 import pygame
 import random
 import json
+import os
+import sys
 
 # --- 1. CONFIG INICIAL ---
 pygame.init()
@@ -31,27 +33,41 @@ FONTE_PEQUENA = pygame.font.Font(None, 35)
 # Nome do arquivo de recordes
 ARQUIVO_HIGHSCORE = "highscores.json"
 
+# --- Funções para gerenciar o caminho de arquivos ---
+def resource_path(relative_path):
+    #Obtém o caminho absoluto para o recurso.
+
+    try:
+        # PyInstaller cria uma pasta temporária 
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 # --- 2. CARREGAMENTO DE ASSETS (IMAGENS E SONS) ---
-# Carregan a imagem de fundo para o menu
+# Carrega a imagem de fundo para o menu
 imagem_menu = None
 try:
-    imagem_menu = pygame.image.load('imagens/menu_background.png').convert()
+    # Usa a função resource_path para carregar a imagem
+    imagem_menu = pygame.image.load(resource_path('imagens/menu_background.png')).convert()
     imagem_menu = pygame.transform.scale(imagem_menu, (LARGURA, ALTURA))
 except pygame.error as e:
     print(f"Aviso: Não foi possível carregar a imagem de fundo do menu: {e}")
 
-# Carregan os arquivos de som e música
+# Carrega os arquivos de som e música
 try:
-    pygame.mixer.music.load('sons/musica_fundo.mp3')
-    som_navegacao_menu = pygame.mixer.Sound('sons/navegacao.wav')
-    som_selecao_menu = pygame.mixer.Sound('sons/selecao.wav')
-    som_acerto_normal = pygame.mixer.Sound('sons/acerto_normal.wav')
-    som_acerto_bonus = pygame.mixer.Sound('sons/acerto_bonus.wav')
-    som_acerto_penalidade = pygame.mixer.Sound('sons/penalidade.wav')
-    som_erro_clique = pygame.mixer.Sound('sons/erro.wav')
-    som_level_up = pygame.mixer.Sound('sons/level_up.wav')
-    som_vitoria = pygame.mixer.Sound('sons/vitoria.wav')
-    som_game_over = pygame.mixer.Sound('sons/game_over.wav')
+    # Usa a função resource_path para carregar os sons
+    pygame.mixer.music.load(resource_path('sons/musica_fundo.mp3'))
+    som_navegacao_menu = pygame.mixer.Sound(resource_path('sons/navegacao.wav'))
+    som_selecao_menu = pygame.mixer.Sound(resource_path('sons/selecao.wav'))
+    som_acerto_normal = pygame.mixer.Sound(resource_path('sons/acerto_normal.wav'))
+    som_acerto_bonus = pygame.mixer.Sound(resource_path('sons/acerto_bonus.wav'))
+    som_acerto_penalidade = pygame.mixer.Sound(resource_path('sons/penalidade.wav'))
+    som_erro_clique = pygame.mixer.Sound(resource_path('sons/erro.wav'))
+    som_level_up = pygame.mixer.Sound(resource_path('sons/level_up.wav'))
+    som_vitoria = pygame.mixer.Sound(resource_path('sons/vitoria.wav'))
+    som_game_over = pygame.mixer.Sound(resource_path('sons/game_over.wav'))
     pygame.mixer.music.set_volume(0.4)
 except pygame.error as e:
     print(f"Erro ao carregar os sons: {e}")
@@ -98,7 +114,7 @@ def carregar_high_scores():
             if 'impossivel' not in scores: scores['impossivel'] = []
             return scores
     except (FileNotFoundError, json.JSONDecodeError):
-      
+        
         return {'comum': [], 'impossivel': []}
 
 def salvar_high_scores(scores):
@@ -397,7 +413,7 @@ while rodando:
             if chance < 0.7: tipo, cor = 'normal', VERMELHO
             elif chance < 0.85: tipo, cor = 'bonus', VERDE
             else: tipo, cor = 'penalidade', AZUL
-           
+            
             novo_alvo = {'rect': rect, 'tipo': tipo, 'cor': cor, 'tempo_criacao': tempo_agora}
             alvos.append(novo_alvo)
             ultimo_spawn = tempo_agora

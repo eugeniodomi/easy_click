@@ -1,0 +1,14 @@
++-----------------------------------------------+
+|  Projeto de Entrega de Programação       	|
+|  	Aplicada - UNINTER                    	|
++-----------------------------------------------+
+|                                         	|
+|  Este é o projeto final da disciplina de	|
+|  Programação Aplicada.                        |
+|                                               |
+|  Mais informações e o código completo         |
+|  podem ser encontrados no GitHub:        	|
+|                                          	|
+|  https://github.com/eugeniodomi/easy_click    |
+|                                               |
++-----------------------------------------------+
