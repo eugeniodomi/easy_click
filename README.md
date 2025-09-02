@@ -4,6 +4,8 @@ Um jogo de arcade e precisão desenvolvido em Python com a biblioteca Pygame. O 
 
 Este projeto foi desenvolvido por Eugenio Domingues como trabalho para a disciplina de Linguagem de Programação Aplicada do centro universitário Uninter.
 
+![Seja rápido como uma atiradora!](imagens/menu_background.png)
+
 ## Funcionalidades
 
 O jogo foi desenvolvido com uma estrutura robusta e conta com diversas funcionalidades para criar uma experiência completa:
@@ -34,3 +36,9 @@ O jogo foi desenvolvido com uma estrutura robusta e conta com diversas funcional
 - **Pygame** (biblioteca para desenvolvimento de jogos)
 
 ---
+
+## Assets / conteúdo
+
+- Imagens geradas com AI (Gemini)
+- Música gerada com AI (Suno)
+- Assets utilizados disponibizados pela comunidade no itch.io
